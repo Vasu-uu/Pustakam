@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pustakam · പുസ്തകം — Your book catalogue</title>
+  <meta name="description" content="Pustakam — a calm, beautiful catalogue for your books.">
+  <meta name="theme-color" content="#FFFFFF">
+
+  <!-- Favicon: a small green book drawn as an inline SVG data URI -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='6' width='44' height='52' rx='7' fill='%232F5D50'/%3E%3Crect x='10' y='6' width='10' height='52' rx='4' fill='%23234A3F'/%3E%3Crect x='26' y='16' width='20' height='3' rx='1.5' fill='%23FFFFFF' opacity='.85'/%3E%3Crect x='26' y='23' width='14' height='3' rx='1.5' fill='%23FFFFFF' opacity='.55'/%3E%3Cpath d='M40 6h8v18l-4-3-4 3z' fill='%23C2603E'/%3E%3C/svg%3E">
+
+  <!-- Apply the saved theme before first paint (light is the default) -->
+  <script>
+    (function () {
+      try {
+        var saved = JSON.parse(localStorage.getItem('pustakam_v1') || 'null');
+        if (saved && saved.prefs && saved.prefs.theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) { /* storage blocked: stay on the light theme */ }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Inter:wght@400;500;600;700&family=Noto+Sans+Malayalam:wght@400;500;600&family=Noto+Serif+Malayalam:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ SVG icon sprite (referenced with <use href="#i-…">) ============ -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-3-3L5 17v3"/><path d="m14 8 2 2"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></symbol>
+      <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".6"/><circle cx="4.5" cy="12" r=".6"/><circle cx="4.5" cy="18" r=".6"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-sort" viewBox="0 0 24 24"><path d="M8 4v16M4 8l4-4 4 4M16 20V4M12 16l4 4 4-4"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></symbol>
+      <symbol id="i-building" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15M9 21v-5h6v5M8 9h.01M12 9h.01M16 9h.01M8 12.5h.01M12 12.5h.01M16 12.5h.01"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5v-15Z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 19l7-7 2 2-7 7-2-2Z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5Z"/><path d="m2 2 7.6 7.6"/><circle cx="11" cy="11" r="2"/></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9Z"/><circle cx="7.5" cy="7.5" r="1.2"/></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+      <symbol id="i-library" viewBox="0 0 24 24"><path d="M4 4v16M8 4v16M12 6l4 14M16 5l4 15"/></symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#catalogue">Skip to catalogue</a>
+
+  <!-- ============ App bar ============ -->
+  <header class="appbar">
+    <div class="container appbar-inner">
+      <a class="brand" href="./" aria-label="Pustakam, home">
+        <span class="brand-mark" aria-hidden="true"><svg class="icon"><use href="#i-book"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-name">Pustakam</span>
+          <span class="brand-ml" lang="ml">പുസ്തകം</span>
+        </span>
+      </a>
+
+      <div class="search">
+        <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <label for="search" class="sr-only">Search books</label>
+        <input id="search" type="search" placeholder="Search title, writer or publisher" autocomplete="off" spellcheck="false">
+        <kbd class="search-kbd" aria-hidden="true">/</kbd>
+      </div>
+
+      <div class="appbar-actions">
+        <div class="menu" id="backupMenu">
+          <button class="btn btn-outline menu-btn" id="backupBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="backupList" aria-label="Backup">
+            <svg class="icon" aria-hidden="true"><use href="#i-archive"/></svg>
+            <span class="backup-dot" id="backupDot" aria-hidden="true" hidden></span>
+            <span class="menu-btn-label">Backup</span>
+            <svg class="icon icon-sm menu-caret" aria-hidden="true"><use href="#i-chevron"/></svg>
+          </button>
+          <div class="menu-list" id="backupList" role="menu" aria-labelledby="backupBtn" hidden>
+            <p class="menu-heading">Backup on this device</p>
+            <button class="menu-item" role="menuitem" type="button" data-action="export-csv">
+              <span class="menu-icon"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></span>
+              <span><strong>Download backup</strong><small id="menuBackupText">Save all books as a CSV file</small></span>
+            </button>
+            <button class="menu-item" role="menuitem" type="button" data-action="import-csv">
+              <span class="menu-icon"><svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg></span>
+              <span><strong>Restore from backup</strong><small>Merge or replace from a CSV file</small></span>
+            </button>
+            <p class="menu-foot">The CSV opens in Excel and Google Sheets, Malayalam included.</p>
+          </div>
+        </div>
+        <button class="icon-btn icon-btn-outline theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark theme">
+          <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+        <button class="btn btn-primary btn-add" id="addBtn" type="button">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+          <span>Add book</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Shown only when localStorage cannot be used -->
+  <div class="container">
+    <div class="notice" id="storageNotice" role="alert" hidden>
+      <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+      <p><strong>Saving is turned off in this browser.</strong> Your books will disappear when you close the page. Allow site storage, or use <em>Backup → Download backup</em> before leaving.</p>
+    </div>
+  </div>
+
+  <!-- ============ Page intro + stats ============ -->
+  <section class="container intro" aria-labelledby="pageTitle">
+    <div class="intro-text">
+      <p class="eyebrow">Your book catalogue</p>
+      <h1 id="pageTitle">Every book you own, <em>beautifully kept.</em></h1>
+      <p class="intro-sub">Add your books, sort them into your own categories, and find any title in a moment.</p>
+    </div>
+
+    <!-- Decorative shelf of book spines -->
+    <svg class="shelf" viewBox="0 0 440 64" preserveAspectRatio="xMaxYMax meet" aria-hidden="true" focusable="false">
+      <g class="spines">
+        <rect class="s1" x="0" y="16" width="14" height="44" rx="2"/>
+        <rect class="s3" x="16" y="8" width="10" height="52" rx="2"/>
+        <rect class="s2" x="28" y="22" width="18" height="38" rx="2"/>
+        <rect class="s5" x="48" y="4" width="12" height="56" rx="2"/>
+        <rect class="s4" x="62" y="12" width="16" height="48" rx="2"/>
+        <rect class="s6" x="80" y="18" width="9" height="42" rx="2"/>
+        <rect class="s1" x="91" y="6" width="20" height="54" rx="2"/>
+        <rect class="s2" x="113" y="20" width="13" height="40" rx="2"/>
+        <rect class="s3" x="128" y="10" width="17" height="50" rx="2"/>
+        <rect class="s4" x="147" y="2" width="11" height="58" rx="2"/>
+        <rect class="s6" x="160" y="16" width="15" height="44" rx="2"/>
+        <rect class="s5" x="177" y="24" width="22" height="36" rx="2"/>
+        <rect class="s1" x="201" y="8" width="12" height="52" rx="2"/>
+        <rect class="s2" x="215" y="14" width="16" height="46" rx="2"/>
+        <rect class="s3" x="233" y="5" width="10" height="55" rx="2"/>
+        <rect class="s4" x="245" y="19" width="19" height="41" rx="2"/>
+        <rect class="s5" x="266" y="10" width="13" height="50" rx="2"/>
+        <rect class="s6" x="281" y="3" width="15" height="57" rx="2"/>
+        <rect class="s1" x="298" y="17" width="11" height="43" rx="2"/>
+        <rect class="s2" x="311" y="8" width="18" height="52" rx="2"/>
+        <rect class="s3" x="331" y="13" width="12" height="47" rx="2"/>
+        <rect class="s4" x="345" y="22" width="16" height="38" rx="2"/>
+        <rect class="s5" x="363" y="10" width="12" height="50" rx="2" transform="rotate(14 363 60)"/>
+        <rect class="s6" x="392" y="52" width="46" height="8" rx="2"/>
+        <rect class="s2" x="396" y="44" width="38" height="8" rx="2"/>
+        <rect class="s4" x="393" y="36" width="42" height="8" rx="2"/>
+      </g>
+      <g class="bands">
+        <rect x="2" y="22" width="10" height="1.5"/><rect x="2" y="52" width="10" height="1.5"/>
+        <rect x="94" y="12" width="14" height="1.5"/><rect x="94" y="16" width="14" height="1"/>
+        <rect x="130" y="16" width="13" height="1.5"/>
+        <rect x="180" y="30" width="16" height="1.5"/><rect x="180" y="52" width="16" height="1.5"/>
+        <rect x="247" y="25" width="15" height="1.5"/>
+        <rect x="283" y="9" width="11" height="1.5"/><rect x="283" y="52" width="11" height="1.5"/>
+        <rect x="313" y="14" width="14" height="1.5"/>
+      </g>
+      <rect class="shelf-line" x="0" y="60" width="440" height="2" rx="1"/>
+    </svg>
+
+    <div class="stats" role="list" aria-label="Catalogue summary">
+      <div class="stat" role="listitem">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon"><use href="#i-book"/></svg></span>
+        <span class="stat-body"><span class="stat-value" data-stat="books">0</span><span class="stat-label">Books</span></span>
+      </div>
+      <div class="stat" role="listitem">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon"><use href="#i-pen"/></svg></span>
+        <span class="stat-body"><span class="stat-value" data-stat="writers">0</span><span class="stat-label">Writers</span></span>
+      </div>
+      <div class="stat" role="listitem">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon"><use href="#i-building"/></svg></span>
+        <span class="stat-body"><span class="stat-value" data-stat="publishers">0</span><span class="stat-label">Publishers</span></span>
+      </div>
+      <div class="stat" role="listitem">
+        <span class="stat-icon" aria-hidden="true"><svg class="icon"><use href="#i-tag"/></svg></span>
+        <span class="stat-body"><span class="stat-value" data-stat="categories">0</span><span class="stat-label">Categories</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Sidebar + catalogue ============ -->
+  <div class="container layout">
+    <aside class="sidebar" aria-label="Categories">
+      <div class="sidebar-inner">
+        <p class="side-title">Categories</p>
+        <div class="side-cats" id="sideCats" role="group" aria-label="Filter by category"></div>
+        <p class="side-hint" id="sideHint" hidden>Categories you type when adding a book will appear here.</p>
+
+        <div class="side-card" id="sideBackup" data-state="none">
+          <span class="side-card-icon" aria-hidden="true"><svg class="icon"><use href="#i-archive"/></svg></span>
+          <p><strong id="sideBackupTitle">Saved in this browser</strong><span id="sideBackupText">Download a backup now and then to keep your books safe.</span></p>
+          <button class="btn btn-soft btn-sm" type="button" data-action="export-csv">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-download"/></svg>
+            <span>Download backup</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content" id="main">
+      <div class="chips-wrap">
+        <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+      </div>
+
+      <div class="results-bar">
+        <div class="results-meta">
+          <p id="resultCount" aria-live="polite">&nbsp;</p>
+          <button class="link-btn" id="clearFilters" type="button" hidden>Clear filters</button>
+        </div>
+        <div class="controls">
+          <label for="sort" class="sr-only">Sort by</label>
+          <div class="select-wrap select-sm">
+            <select id="sort">
+              <option value="recent">Recently added</option>
+              <option value="name">Book name</option>
+              <option value="writer">Writer</option>
+              <option value="publisher">Publisher</option>
+              <option value="firstEdition">First edition year</option>
+              <option value="thisEdition">This edition year</option>
+            </select>
+            <svg class="icon icon-sm select-caret" aria-hidden="true"><use href="#i-chevron"/></svg>
+          </div>
+          <button class="icon-btn icon-btn-outline sort-dir" id="sortDir" type="button" aria-label="Sort descending">
+            <svg class="icon" aria-hidden="true"><use href="#i-sort"/></svg>
+          </button>
+          <div class="segmented" role="group" aria-label="Layout">
+            <button type="button" class="seg-btn" data-view="grid" aria-pressed="true" aria-label="Grid view" title="Grid view">
+              <svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>
+            </button>
+            <button type="button" class="seg-btn" data-view="list" aria-pressed="false" aria-label="List view" title="List view">
+              <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section id="catalogue" class="catalogue" aria-label="Books" tabindex="-1">
+        <!-- Skeleton placeholders for first paint; replaced by script.js -->
+        <div class="book-grid" aria-hidden="true">
+          <div class="skeleton-card"><span class="sk sk-pill"></span><span class="sk sk-title"></span><span class="sk sk-title short"></span><span class="sk sk-line"></span><span class="sk sk-line short"></span></div>
+          <div class="skeleton-card"><span class="sk sk-pill"></span><span class="sk sk-title"></span><span class="sk sk-title short"></span><span class="sk sk-line"></span><span class="sk sk-line short"></span></div>
+          <div class="skeleton-card"><span class="sk sk-pill"></span><span class="sk sk-title"></span><span class="sk sk-title short"></span><span class="sk sk-line"></span><span class="sk sk-line short"></span></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Empty state template -->
+  <template id="emptyTpl">
+    <div class="state">
+      <svg class="state-art" viewBox="0 0 200 140" aria-hidden="true" focusable="false">
+        <ellipse class="art-shadow" cx="100" cy="128" rx="74" ry="6"/>
+        <path class="art-cover" d="M100 44C78 34 46 32 20 38v84c26-6 58-4 80 6 22-10 54-12 80-6V38c-26-6-58-4-80 6Z"/>
+        <path class="art-page" d="M100 38C80 28 52 26 28 32v80c24-6 52-4 72 6V38Z"/>
+        <path class="art-page" d="M100 38c20-10 48-12 72-6v80c-24-6-52-4-72 6V38Z"/>
+        <path class="art-spine" d="M100 38v80"/>
+        <g class="art-lines">
+          <path d="M40 48c16-3 32-2 48 3"/><path d="M40 58c16-3 32-2 48 3"/><path d="M40 68c16-3 32-2 48 3"/><path d="M40 78c12-2 22-2 34 1"/>
+          <path d="M112 51c16-5 32-6 48-3"/><path d="M112 61c16-5 32-6 48-3"/><path d="M112 71c16-5 32-6 48-3"/>
+        </g>
+        <path class="art-ribbon" d="M146 27v40l-6-5-6 5V29"/>
+        <g class="art-spark">
+          <path d="M40 14v10M35 19h10"/><path d="M168 8v8M164 12h8"/><path d="M186 52v6M183 55h6"/>
+        </g>
+      </svg>
+      <h2 class="state-title">Your shelf is waiting</h2>
+      <p class="state-text">Add your first book to begin. You can type any category you like — it will be ready to pick next time.</p>
+      <button class="btn btn-primary btn-lg" type="button" data-action="add-first">
+        <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+        <span>Add your first book</span>
+      </button>
+    </div>
+  </template>
+
+  <!-- No-results template -->
+  <template id="noResultsTpl">
+    <div class="state state-compact">
+      <svg class="state-art small" viewBox="0 0 160 120" aria-hidden="true" focusable="false">
+        <ellipse class="art-shadow" cx="80" cy="110" rx="52" ry="5"/>
+        <rect class="art-cover" x="34" y="26" width="64" height="80" rx="6"/>
+        <rect class="art-page" x="42" y="26" width="56" height="80" rx="4"/>
+        <g class="art-lines"><path d="M52 44h34M52 54h28M52 64h32"/></g>
+        <circle class="art-lens" cx="102" cy="62" r="20"/>
+        <path class="art-handle" d="m116 76 14 14"/>
+      </svg>
+      <h2 class="state-title">No books match</h2>
+      <p class="state-text" data-slot="query">Try a different word, or clear the search and filters.</p>
+      <button class="btn btn-outline" type="button" data-action="clear-filters">Clear search &amp; filters</button>
+    </div>
+  </template>
+
+  <footer class="footer container">
+    <p><span>Pustakam <span lang="ml">· പുസ്തകം</span></span><span>Your books stay on this device. Download a CSV backup now and then.</span></p>
+  </footer>
+
+  <!-- Floating add button (phones) -->
+  <button class="fab" id="fab" type="button" aria-label="Add book">
+    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+  </button>
+
+  <!-- ============ Add / Edit drawer ============ -->
+  <div class="overlay" id="drawerOverlay" hidden>
+    <div class="backdrop" data-close></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="drawer-head">
+        <div>
+          <p class="eyebrow" id="drawerEyebrow">New entry</p>
+          <h2 id="drawerTitle">Add a book</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </header>
+
+      <form id="bookForm" class="drawer-body" novalidate autocomplete="off">
+        <div class="field" data-field="name">
+          <label for="f-name">Book name</label>
+          <input id="f-name" name="name" type="text" required aria-describedby="e-name" placeholder="e.g. Randamoozham">
+          <div class="field-error" id="e-name"><span></span></div>
+        </div>
+
+        <div class="field" data-field="writer">
+          <label for="f-writer">Writer</label>
+          <input id="f-writer" name="writer" type="text" required aria-describedby="e-writer" placeholder="e.g. M. T. Vasudevan Nair">
+          <div class="field-error" id="e-writer"><span></span></div>
+        </div>
+
+        <div class="field" data-field="publisher">
+          <label for="f-publisher">Publisher</label>
+          <input id="f-publisher" name="publisher" type="text" required aria-describedby="e-publisher" placeholder="e.g. Current Books">
+          <div class="field-error" id="e-publisher"><span></span></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field" data-field="firstEdition">
+            <label for="f-first">First edition year</label>
+            <input id="f-first" name="firstEdition" type="text" inputmode="numeric" maxlength="4" required aria-describedby="e-firstEdition" placeholder="YYYY">
+            <div class="field-error" id="e-firstEdition"><span></span></div>
+          </div>
+          <div class="field" data-field="thisEdition">
+            <label for="f-this">This edition year</label>
+            <input id="f-this" name="thisEdition" type="text" inputmode="numeric" maxlength="4" required aria-describedby="e-thisEdition" placeholder="YYYY">
+            <div class="field-error" id="e-thisEdition"><span></span></div>
+          </div>
+        </div>
+
+        <!-- Category: type a new one or pick an existing one -->
+        <div class="field" data-field="category">
+          <label for="f-category">Category</label>
+          <div class="combo" id="categoryCombo">
+            <span class="combo-dot" id="categoryDot" aria-hidden="true"></span>
+            <input id="f-category" name="category" type="text" required maxlength="40"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="categoryList"
+                   aria-describedby="h-category e-category" placeholder="Type or choose a category">
+            <button class="combo-toggle" type="button" tabindex="-1" aria-label="Show categories" id="categoryToggle">
+              <svg class="icon icon-sm" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+            <ul class="combo-list" id="categoryList" role="listbox" aria-label="Categories" hidden></ul>
+          </div>
+          <p class="field-hint" id="h-category">Pick one you've used before, or type a new name to create it.</p>
+          <div class="field-error" id="e-category"><span></span></div>
+        </div>
+      </form>
+
+      <footer class="drawer-foot">
+        <button class="btn btn-outline" type="button" data-close>Cancel</button>
+        <button class="btn btn-primary" type="submit" form="bookForm" id="saveBtn">
+          <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+          <span>Save book</span>
+        </button>
+      </footer>
+    </aside>
+  </div>
+
+  <!-- ============ Confirmation dialog (delete, duplicates, import) ============ -->
+  <div class="overlay overlay-center" id="dialogOverlay" hidden>
+    <div class="backdrop" data-dismiss></div>
+    <div class="dialog" id="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogText">
+      <span class="dialog-icon" id="dialogIcon" aria-hidden="true"></span>
+      <h2 id="dialogTitle"></h2>
+      <p id="dialogText"></p>
+      <div class="dialog-actions" id="dialogActions"></div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <input type="file" id="importFile" accept=".csv,text/csv" hidden>
+
+  <script src="script.js"></script>
+</body>
+</html>

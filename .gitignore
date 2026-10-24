@@ -1,0 +1,28 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local tools (preview server config, etc.)
+.claude/
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+*.tmp
+
+# Dependencies, in case any tooling is added later
+node_modules/
+
+# Personal backups downloaded while testing — keep your catalogue private
+pustakam-backup-*.csv
+books.csv

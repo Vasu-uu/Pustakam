@@ -4,6 +4,22 @@
 
 Pustakam is a static website: plain HTML, CSS and JavaScript, with no frameworks, no build step and no server. It runs entirely in the browser and can be hosted free on GitHub Pages.
 
+## Screenshots
+
+### PC view
+
+![Pustakam on a desktop — light theme, grid of book cards](screenshots/desktop-light.png)
+
+![Pustakam on a desktop — dark theme, list view](screenshots/desktop-dark-list.png)
+
+### Mobile view
+
+![Pustakam on a phone — light and dark themes](screenshots/mobile.png)
+
+## Android app
+
+An Android app version lives in [`mobile/`](mobile/). You can install the ready-built [`mobile/Pustakam.apk`](mobile/Pustakam.apk) directly on an Android phone (you may need to allow installing apps from unknown sources). See [mobile/README.md](mobile/README.md) for how to build it yourself.
+
 ## What it does
 
 - Keep a catalogue of books with six fields: **Book name, Writer, Publisher, First edition year, This edition year, Category**.
@@ -28,6 +44,7 @@ Pustakam is a static website: plain HTML, CSS and JavaScript, with no frameworks
 | `style.css` | All styling, colours and themes |
 | `script.js` | Storage, search, sorting, rendering, validation and backup |
 | `README.md` | This guide |
+| `screenshots/` | Images used in this guide |
 | `mobile/` | The Android app version, built from these same files — see [mobile/README.md](mobile/README.md) |
 
 ## Deploy on GitHub Pages (free)

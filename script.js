@@ -28,6 +28,11 @@
   const CURRENT_YEAR = new Date().getFullYear();
   const MAX_CATEGORY_LENGTH = 40;
 
+  // Set when Pustakam runs as the Android app (see the mobile/ folder).
+  // Gives access to the app's native plugins; null in a normal browser.
+  const nativeApp = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
+    ? window.Capacitor.Plugins : null;
+
   // Spine colours handed out, in order, to each new category the owner creates.
   // Muted, medium tones that read well on both the light and dark themes.
   const CATEGORY_COLORS = [
@@ -371,7 +376,7 @@
   function countTo(el, target) {
     const from = Number(el.dataset.value || 0);
     el.dataset.value = target;
-    if (from === target || reducedMotion.matches) { el.textContent = target.toLocaleString(); return; }
+    if (from === target || reducedMotion.matches || nativeApp) { el.textContent = target.toLocaleString(); return; }
     const duration = 700;
     const start = performance.now();
     cancelAnimationFrame(el._raf);
@@ -450,9 +455,23 @@
       return;
     }
 
-    container.innerHTML = state.prefs.view === 'list'
-      ? tableHTML(list, animate)
-      : `<div class="book-grid">${list.map((b, i) => cardHTML(b, i, animate)).join('')}</div>`;
+    // Long catalogues are drawn in batches as the owner scrolls, so phones never
+    // build hundreds of cards at once. A re-render keeps at least as many as were
+    // showing (so the page doesn't jump), and always includes a book being flashed.
+    const view = state.prefs.view;
+    const key = [view, state.query, state.category, state.prefs.sortKey, state.prefs.sortDir].join('|');
+    let count = Math.max(BATCH_SIZE, batch.key === key ? batch.shown : 0);
+    if (options.flashId) {
+      const at = list.findIndex((b) => b.id === options.flashId);
+      if (at >= count) count = at + BATCH_SIZE;
+    }
+    count = Math.min(count, list.length);
+    const first = list.slice(0, count);
+    container.innerHTML = view === 'list'
+      ? tableHTML(first, animate)
+      : `<div class="book-grid">${first.map((b, i) => cardHTML(b, i, animate)).join('')}</div>`;
+    Object.assign(batch, { list, view, key, shown: count });
+    watchForMore(container);
 
     // Re-rendering replaces the buttons, so put keyboard focus somewhere sensible.
     const lostFocus = !document.activeElement || document.activeElement === document.body;
@@ -471,6 +490,39 @@
     }
   }
 
+  /* --- Drawing long lists in batches --- */
+
+  const BATCH_SIZE = 40;
+  const batch = { list: [], view: '', key: '', shown: 0, observer: null };
+
+  /** Put a marker after the last drawn book; when it nears the screen, draw the next batch. */
+  function watchForMore(container) {
+    if (batch.observer) batch.observer.disconnect();
+    if (batch.shown >= batch.list.length) return;
+    const marker = document.createElement('div');
+    marker.className = 'load-more';
+    marker.setAttribute('aria-hidden', 'true');
+    container.appendChild(marker);
+    batch.observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) drawMore(container, marker);
+    }, { rootMargin: '0px 0px 1500px 0px' });
+    batch.observer.observe(marker);
+  }
+
+  function drawMore(container, marker) {
+    const next = batch.list.slice(batch.shown, batch.shown + BATCH_SIZE);
+    if (batch.view === 'list') {
+      container.querySelector('.book-table tbody').insertAdjacentHTML('beforeend', next.map((b) => rowHTML(b, 0, false)).join(''));
+    } else {
+      container.querySelector('.book-grid').insertAdjacentHTML('beforeend', next.map((b) => cardHTML(b, 0, false)).join(''));
+    }
+    batch.shown += next.length;
+    if (batch.shown >= batch.list.length) {
+      batch.observer.disconnect();
+      marker.remove();
+    }
+  }
+
   function yearText(y) {
     return y == null ? '—' : String(y);
   }
@@ -484,9 +536,10 @@
     return `<span class="cat-pill"><span class="cat-dot" aria-hidden="true"></span><span${langAttr(b.category)}>${esc(b.category)}</span></span>`;
   }
 
-  /** Stagger delay is capped so long lists still appear quickly. */
+  /** Only the first cards (the ones on screen) animate in, so long lists stay quick. */
+  const ANIMATED_ITEMS = 12;
   function animAttrs(i, animate) {
-    return animate ? { cls: ' animate-in', style: `;--i:${Math.min(i, 14)}` } : { cls: '', style: '' };
+    return animate && i < ANIMATED_ITEMS ? { cls: ' animate-in', style: `;--i:${i}` } : { cls: '', style: '' };
   }
 
   function cardHTML(b, i, animate) {
@@ -510,25 +563,27 @@
       </article>`;
   }
 
+  function rowHTML(b, i, animate) {
+    const a = animAttrs(i, animate);
+    return `
+      <tr class="${a.cls.trim()}" style="--cat:${colorOf(b.category)}${a.style}" data-id="${esc(b.id)}">
+        <td class="td-main"><div class="td-title"><span class="cat-dot" aria-hidden="true"></span><strong${langAttr(b.name)}>${esc(b.name)}</strong></div></td>
+        <td class="td-writer"${langAttr(b.writer)}><span class="td-label">Writer</span>${esc(b.writer)}</td>
+        <td class="td-publisher"${langAttr(b.publisher)}><span class="td-label">Publisher</span>${esc(b.publisher)}</td>
+        <td class="td-year"><span class="td-label">1st ed.</span>${yearText(b.firstEdition)}</td>
+        <td class="td-year"><span class="td-label">This ed.</span>${yearText(b.thisEdition)}</td>
+        <td class="td-cat">${categoryPill(b)}</td>
+        <td class="td-actions">${actionButtons(b)}</td>
+      </tr>`;
+  }
+
   function tableHTML(list, animate) {
     const { sortKey, sortDir } = state.prefs;
     const th = (key, label) => {
       const sorted = key === sortKey ? ` aria-sort="${sortDir === 'asc' ? 'ascending' : 'descending'}"` : '';
       return `<th scope="col"${sorted}><button type="button" class="th-btn" data-sort="${key}">${label}${icon('chevron', 'icon th-arrow')}</button></th>`;
     };
-    const rows = list.map((b, i) => {
-      const a = animAttrs(i, animate);
-      return `
-        <tr class="${a.cls.trim()}" style="--cat:${colorOf(b.category)}${a.style}" data-id="${esc(b.id)}">
-          <td class="td-main"><div class="td-title"><span class="cat-dot" aria-hidden="true"></span><strong${langAttr(b.name)}>${esc(b.name)}</strong></div></td>
-          <td class="td-writer"${langAttr(b.writer)}><span class="td-label">Writer</span>${esc(b.writer)}</td>
-          <td class="td-publisher"${langAttr(b.publisher)}><span class="td-label">Publisher</span>${esc(b.publisher)}</td>
-          <td class="td-year"><span class="td-label">1st ed.</span>${yearText(b.firstEdition)}</td>
-          <td class="td-year"><span class="td-label">This ed.</span>${yearText(b.thisEdition)}</td>
-          <td class="td-cat">${categoryPill(b)}</td>
-          <td class="td-actions">${actionButtons(b)}</td>
-        </tr>`;
-    }).join('');
+    const rows = list.map((b, i) => rowHTML(b, i, animate)).join('');
     return `
       <div class="book-table-wrap">
         <table class="book-table">
@@ -1109,6 +1164,12 @@
     return `﻿${lines.join('\r\n')}\r\n`;
   }
 
+  function markBackedUp() {
+    state.prefs.backup = { lastAt: new Date().toISOString(), changes: 0 };
+    persist();
+    renderBackupStatus();
+  }
+
   function downloadBackup() {
     const n = state.books.length;
     if (!n) {
@@ -1116,11 +1177,45 @@
       return;
     }
     const filename = `pustakam-backup-${dayStamp()}.csv`;
+    if (nativeApp) { saveBackupInApp(filename, buildCSV(), n); return; }
     download(filename, buildCSV(), 'text/csv;charset=utf-8');
-    state.prefs.backup = { lastAt: new Date().toISOString(), changes: 0 };
-    persist();
-    renderBackupStatus();
+    markBackedUp();
     toast(`Backup saved as ${filename} · ${n} ${plural(n, 'book', 'books')}`, { icon: 'download', duration: 5000 });
+  }
+
+  /**
+   * In the Android app there are no browser downloads. Save the CSV to
+   * Documents/Pustakam (visible in the phone's Files app) and offer the share
+   * sheet, so it can also go to Drive, email or another phone.
+   */
+  async function saveBackupInApp(filename, csv, n) {
+    const { Filesystem, Share } = nativeApp;
+    const share = (uri) => Share.share({ title: filename, dialogTitle: 'Send backup to…', files: [uri] })
+      .catch(() => { /* closed the share sheet */ });
+    const write = (name) => Filesystem.writeFile({
+      path: `Pustakam/${name}`, data: csv, directory: 'DOCUMENTS', encoding: 'utf8', recursive: true
+    });
+    try {
+      // A file with today's name left by an earlier install of the app can't be
+      // overwritten, so fall back to a name that also has the time.
+      const now = new Date();
+      const timed = filename.replace('.csv', `-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.csv`);
+      const saved = await write(filename).catch(() => write(timed));
+      markBackedUp();
+      toast(`Saved to Documents/Pustakam · ${n} ${plural(n, 'book', 'books')}`, {
+        icon: 'download', duration: 7000,
+        action: { label: 'Share', icon: 'upload', run: () => share(saved.uri) }
+      });
+    } catch (_) {
+      // Documents not writable on this phone: keep a copy in the app and let the owner choose where it goes.
+      try {
+        const temp = await Filesystem.writeFile({ path: filename, data: csv, directory: 'CACHE', encoding: 'utf8' });
+        markBackedUp();
+        await share(temp.uri);
+      } catch (err) {
+        toast('Couldn’t save the backup on this phone.', { tone: 'danger', icon: 'alert' });
+      }
+    }
   }
 
   /* --- Reading CSV --- */
@@ -1317,7 +1412,15 @@
     themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
     themeToggle.title = theme === 'dark' ? 'Light theme' : 'Dark theme';
     const meta = $('meta[name="theme-color"]');
-    if (meta) meta.content = theme === 'dark' ? '#161412' : '#FFFFFF';
+    const barColor = theme === 'dark' ? '#161412' : '#FFFFFF';
+    if (meta) meta.content = barColor;
+    // In the app, match the phone's status and navigation bars to the theme.
+    // (setStyle resets the bar background, so the colour is set after it.)
+    if (nativeApp && nativeApp.SystemBars) {
+      nativeApp.SystemBars.setStyle({ style: theme === 'dark' ? 'DARK' : 'LIGHT' })
+        .then(() => nativeApp.WindowColor && nativeApp.WindowColor.set({ color: barColor }))
+        .catch(() => {});
+    }
   }
 
   /* 14. Event handling ==================================================== */
@@ -1371,9 +1474,11 @@
     let searchTimer;
     els.search.addEventListener('input', () => {
       clearTimeout(searchTimer);
+      // Results update in place while typing; replaying the entrance animation
+      // on every letter made searching feel sluggish.
       searchTimer = setTimeout(() => {
         state.query = els.search.value;
-        render({ animate: true });
+        render();
       }, 120);
     });
     els.search.addEventListener('keydown', (e) => {
@@ -1527,6 +1632,21 @@
       }
     });
 
+    // Android app: the phone's Back button closes whatever is open first,
+    // then clears search and filters, and only then leaves the app.
+    if (nativeApp && nativeApp.App) {
+      $('#importFile').removeAttribute('accept'); // Android's picker can hide CSVs from Drive etc.
+      nativeApp.App.addListener('backButton', () => {
+        if (!menu.list.hidden || overlayStack.length) {
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        } else if (state.query || state.category !== 'all') {
+          clearFilters();
+        } else {
+          nativeApp.App.minimizeApp();
+        }
+      });
+    }
+
     // Keep data in sync if Pustakam is open in another tab.
     window.addEventListener('storage', (e) => {
       if (e.key !== STORAGE_KEY) return;
@@ -1571,8 +1691,10 @@
     renderBackupStatus();
     // Keep "x min ago" in the backup reminder fresh.
     setInterval(renderBackupStatus, 60000);
-    // Let the skeleton show for a moment so the first paint feels intentional.
-    setTimeout(() => render({ animate: true }), reducedMotion.matches ? 0 : 300);
+    // On the website, let the skeleton show for a moment so the first paint feels
+    // intentional. The app shows the books straight away.
+    if (nativeApp) render();
+    else setTimeout(() => render({ animate: true }), reducedMotion.matches ? 0 : 300);
   }
 
   init();

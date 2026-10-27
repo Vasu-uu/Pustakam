@@ -1,0 +1,14 @@
+{
+  "appId": "com.pustakam.app",
+  "appName": "Pustakam",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#FFFFFF"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "LIGHT"
+    }
+  }
+}

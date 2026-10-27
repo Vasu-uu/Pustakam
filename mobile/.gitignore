@@ -1,0 +1,5 @@
+node_modules/
+# Built from the website by scripts/copy-web.mjs
+www/
+# Built APKs copied here by scripts/build-apk.mjs
+*.apk

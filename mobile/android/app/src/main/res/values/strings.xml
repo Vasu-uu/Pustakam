@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pustakam</string>
+    <string name="title_activity_main">Pustakam</string>
+    <string name="package_name">com.pustakam.app</string>
+    <string name="custom_url_scheme">com.pustakam.app</string>
+</resources>

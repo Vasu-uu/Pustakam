@@ -28,6 +28,7 @@ Pustakam is a static website: plain HTML, CSS and JavaScript, with no frameworks
 | `style.css` | All styling, colours and themes |
 | `script.js` | Storage, search, sorting, rendering, validation and backup |
 | `README.md` | This guide |
+| `mobile/` | The Android app version, built from these same files — see [mobile/README.md](mobile/README.md) |
 
 ## Deploy on GitHub Pages (free)
 

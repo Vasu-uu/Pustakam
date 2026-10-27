@@ -1,0 +1,31 @@
+{
+  "name": "pustakam-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pustakam as an Android app (Capacitor wrapper around the website in the parent folder)",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.mjs",
+    "sync": "npm run copy-web && npx cap sync android",
+    "icons": "node scripts/make-icon.mjs && npx capacitor-assets generate --android --iconBackgroundColor \"#2F5D50\" --iconBackgroundColorDark \"#2F5D50\" --splashBackgroundColor \"#FFFFFF\" --splashBackgroundColorDark \"#161412\"",
+    "build:apk": "npm run sync && node scripts/build-apk.mjs",
+    "open": "npx cap open android",
+    "build:debug": "npm run sync && node scripts/build-apk.mjs --debug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/noto-sans-malayalam": "^5.3.0",
+    "@fontsource/noto-serif-malayalam": "^5.3.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3",
+    "esbuild": "^0.28.2",
+    "sharp": "^0.35.5"
+  }
+}

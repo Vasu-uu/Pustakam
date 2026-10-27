@@ -397,6 +397,7 @@ select option { background: var(--surface); color: var(--ink); }
 .appbar {
   position: relative;
   z-index: 30;
+  padding-top: env(safe-area-inset-top); /* room for the phone's status bar in the app */
   background: var(--appbar-bg);
   border-bottom: 1px solid var(--border);
   -webkit-backdrop-filter: saturate(1.6) blur(14px);
@@ -948,7 +949,13 @@ select option { background: var(--surface); color: var(--ink); }
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), border-color var(--t) var(--ease);
+  /* Cards far off screen skip layout and painting until scrolled near — keeps big catalogues smooth. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
 }
+/* Invisible marker after the last drawn book; scrolling near it draws more (script.js) */
+.load-more { height: 1px; }
+
 /* A faint stack of page edges on the right */
 .book-card::after {
   content: "";
@@ -1655,8 +1662,21 @@ th[aria-sort="ascending"] .th-arrow { transform: rotate(180deg); }
 .fab:focus-visible { border-radius: 18px; outline-offset: 3px; }
 @media (min-width: 640px) { .fab { display: none; } }
 
+/* When the page runs edge to edge (iPhone home-screen web app, Android app),
+   keep a solid strip behind the status bar so scrolled content never sits under the clock. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: env(safe-area-inset-top);
+  background: var(--surface);
+  pointer-events: none;
+}
+:root[data-theme="dark"] body::before { background: var(--bg); }
+
 .footer {
-  padding-bottom: calc(var(--s-10) + 40px);
+  padding-bottom: calc(var(--s-10) + 40px + env(safe-area-inset-bottom));
   font-size: var(--text-xs);
   color: var(--muted);
 }
@@ -1715,6 +1735,19 @@ th[aria-sort="ascending"] .th-arrow { transform: rotate(180deg); }
 .side-card p span { display: block; overflow-wrap: break-word; }
 .side-card[data-state="ok"] .side-card-icon { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
 .side-card[data-state="due"] .side-card-icon { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+
+/* Android app (class set on <html> by mobile/scripts/copy-web.mjs) ========
+   Phones redraw blurred, see-through layers on every scroll frame, so the app
+   uses solid colours instead, and quicker, lighter animations. */
+:root.is-app { --appbar-bg: var(--surface); }
+:root.is-app[data-theme="dark"] { --appbar-bg: var(--bg); }
+.is-app .appbar,
+.is-app .backdrop,
+.is-app .book-table th { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.is-app .book-table th { background: var(--surface-2); }
+.is-app body { -webkit-tap-highlight-color: transparent; }
+.is-app .animate-in { animation-duration: 260ms; animation-delay: calc(var(--i, 0) * 18ms); }
+.is-app .skeleton-card .sk { animation: none; }
 
 /* 15. Animations & reduced motion ========================================= */
 .animate-in {
